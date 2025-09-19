@@ -1,0 +1,101 @@
+# Unified configuration for probe detection training
+seed: 42
+device: "0"  # "mps" for Apple Silicon, "cpu" for CPU, "0" for CUDA GPU
+model: "yolo_nano"  # "yolo_v8", "yolo_nano", "faster_rcnn"
+
+# Data configuration
+data:
+  images_root: "data/probe_images"
+  labels_json: "data/labels_internal.json"
+  splits_dir: "data/splits"
+  class_names: ["probe"]
+
+# Augmentation configuration
+aug:
+  # Geometry
+  degrees: 0.0
+  translate: 0.00
+  scale_min: 1.0
+  scale_max: 1.0
+  shear: 0.0
+  fliplr_p: 0.5
+  flipud_p: 0.5
+  
+  # Photometric
+  brightness: 0.25
+  contrast: 0.25
+  brightness_contrast_p: 0.5
+  gamma: [0.9, 1.1] # not too much, we also have CLAHE
+  gamma_p: 0.3
+  motion_blur_p: 0.20
+  motion_blur_limit: [3, 7] # 7 is on the smaller side, but so is the probe tip
+  noise_p: 0.2
+  noise_std_range: [0.01, 0.05]
+  clahe_p: 0.2
+  clahe_clip_limit: 2.5
+  clahe_tile_grid_size: [8, 8]
+  glare_p: 0.00  # Mostly inside, no sun
+  glare_flare_roi: [0.0, 0.0, 1.0, 0.5]
+  glare_src_radius: 100
+  glare_src_color: [255, 255, 255]
+  glare_angle_range: [0.0, 1.0]
+  glare_num_circles_range: [3, 6]
+  glare_method: overlay
+  vignette_p: 0.2  # Moderate probability for realistic shadow effects
+  vignette_shadow_roi: [0.0, 0.5, 1.0, 1.0]
+  vignette_num_shadows_limit: [1, 2]
+  vignette_shadow_dimension: 5
+  vignette_intensity_range: [0.3, 0.7]
+  
+  # Padding
+  use_reflect: false
+  pixels: 0
+
+# YOLO configuration
+yolo:
+  weights: ""
+  imgsz: 640
+  epochs: 1
+  batch_size: 16
+  conf: null  # Will be determined dynamically during validation
+  iou: 0.5
+  rect: false
+  patience: 50
+  ema: true
+  n_augmentations: 4  # Number of augmented versions per image
+  optimizer: auto # if auto, below doesn't matter
+  lr0: 0.01
+  momentum: 0.937
+  weight_decay: 0.0005
+  lrf: 0.01
+
+# Faster R-CNN configuration
+rcnn:
+  weights: "pretrained"
+  imgsz: 640
+  epochs: 80
+  batch_size: 2
+  conf: null  # Will be determined dynamically during validation
+  iou: 0.5
+  backbone: "mobilenet_v3_large_fpn"
+  learning_rate: 0.005
+  weight_decay: 0.0005
+  optimizer: AdamW
+  momentum: 0.9
+  patience: 20
+
+# Unified evaluation configuration
+eval:
+  conf_sweep: [0.005, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.20]
+  iou_thresh: 0.8
+  nms_iou_sweep: []      # optional NMS IoU sweep
+  max_det: 1
+  edge_touch_k: 0        # 0 = no edge constraint
+  metric: f1             # f1, precision, recall
+  sweep_every: 0         # 0 = only after training, >0 = every N epochs
+  save_val_viz: true
+
+# Training settings
+project: "runs/probe"
+name: null  # Will be auto-generated if null
+save_dir: null  # Will be auto-generated if null

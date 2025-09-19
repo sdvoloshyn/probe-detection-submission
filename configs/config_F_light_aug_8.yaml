@@ -1,0 +1,73 @@
+seed: 42
+device: "0"
+model: "yolo_nano"
+
+data:
+  images_root: "data/probe_images"
+  labels_json: "data/labels_internal.json"
+  splits_dir: "data/splits"
+  class_names: ["probe"]
+
+aug:
+  degrees: 0.0
+  translate: 0.00
+  scale_min: 1.0
+  scale_max: 1.0
+  shear: 0.0
+  fliplr_p: 0.5
+  flipud_p: 0.5
+
+  brightness: 0.10
+  contrast: 0.10
+  brightness_contrast_p: 0.25
+  gamma: [0.95, 1.05]
+  gamma_p: 0.2
+  motion_blur_p: 0.05
+  motion_blur_limit: [3, 5]
+  noise_p: 0.05
+  noise_std_range: [0.005, 0.02]
+  clahe_p: 0.05
+  clahe_clip_limit: 2.0
+  vignette_p: 0.05
+
+  use_reflect: false
+  pixels: 0
+
+yolo:
+  weights: ""
+  imgsz: 640
+  epochs: 80
+  batch_size: 48
+  conf: null
+  iou: 0.5
+  rect: false
+  patience: 50
+  ema: true
+  n_augmentations: 8
+  # optimizer: auto
+  optimizer: AdamW        # NOT 'auto'
+  lr0: 0.00015             # lower start LR
+  lrf: 0.10               # final LR = 10% of lr0 (gentler decay)
+  momentum: 0.9           # beta1 for AdamW in ulty
+  weight_decay: 0.0005
+  cos_lr: true            # (optional) cosine schedule
+  warmup_epochs: 3
+  warmup_momentum: 0.8
+  warmup_bias_lr: 0.001
+
+eval:
+  # Sweep policy (applied every epoch)
+  iou_thresh: 0.80
+  max_det: 1
+  edge_touch_k: 0
+  conf_sweep: [0.005, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90]
+  fp_rate_cap: 0.05  # op selection but not early stopping
+  save_sweep_tables: false
+  final_viz: true
+
+  # Early stopping
+  early_stopping_metric: f1_best # 'map' (mAP50-95) or 'map50'
+  early_stopping_patience: 15 # epochs
+  early_stopping_min_delta: 0.001
+  es_min_epoch: 1
+name: "A_no_aug"
